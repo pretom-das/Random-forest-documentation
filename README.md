@@ -1,6 +1,10 @@
 # Random-forest-documentation
 
 
+# 🫀 Heart Failure Prediction – Data Analysis & Machine Learning
+
+This project explores the **Heart Failure Prediction** dataset, performing data cleaning, transformation, visualization, and training machine learning models (SVM, Decision Tree, Random Forest) to predict heart disease. It uses pandas, scikit-learn, seaborn, and matplotlib.
+
 ---
 
 ## 📦 Dataset
@@ -186,3 +190,134 @@ print("-----------------------------")
 ```bash
 pip install pandas numpy matplotlib seaborn scikit-learn
 ```
+
+
+---
+
+## ⚖️ Handling Class Imbalance with SMOTE
+
+### 🔍 Step 1: Check for Class Imbalance
+
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Count values in target variable
+class_counts = dataframe['HeartDisease'].value_counts()
+print(class_counts)
+
+# Visualize the class imbalance
+sns.countplot(x='HeartDisease', data=dataframe)
+plt.title('Class Distribution')
+plt.show()
+```
+
+### 🔁 Step 2: Apply SMOTE
+
+```python
+from imblearn.over_sampling import SMOTE
+from collections import Counter
+
+# Prepare features and labels
+X = dataframe.drop(['HeartDisease'], axis=1)
+y = dataframe['HeartDisease']
+
+# Apply SMOTE
+smote = SMOTE(random_state=42)
+X_resampled, y_resampled = smote.fit_resample(X, y)
+
+# Check the new class distribution
+print("After SMOTE:", Counter(y_resampled))
+```
+
+### 📊 Optional: Visualize Balanced Classes
+
+```python
+sns.countplot(x=y_resampled)
+plt.title('Class Distribution After SMOTE')
+plt.show()
+```
+
+> ✅ After SMOTE, proceed with train-test split using `X_resampled` and `y_resampled`.
+```python
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=0)
+```
+
+
+---
+
+## 🏷️ Label Encoding (All At Once)
+
+Use `LabelEncoder` to convert multiple categorical columns into numerical values:
+
+```python
+from sklearn.preprocessing import LabelEncoder
+
+LE = LabelEncoder()
+
+# Apply label encoding to all categorical columns
+categorical_cols = ['ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']
+for col in categorical_cols:
+    dataframe[col + '_LE'] = LE.fit_transform(dataframe[col])
+
+# Drop original categorical columns
+dataframe.drop(columns=categorical_cols, inplace=True)
+```
+
+---
+
+## 🔍 Hyperparameter Tuning using Grid Search
+
+Use `GridSearchCV` to find the best parameters for models like SVM or Random Forest:
+
+### 🧪 Grid Search on SVM
+
+```python
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+
+# Define the parameter grid
+param_grid = {
+    'C': [0.1, 1, 10],
+    'kernel': ['linear', 'rbf', 'poly'],
+    'gamma': ['scale', 'auto']
+}
+
+grid_svm = GridSearchCV(SVC(random_state=42), param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+grid_svm.fit(X_train, y_train)
+
+# Best parameters and accuracy
+print("Best Parameters (SVM):", grid_svm.best_params_)
+print("Best Accuracy (SVM):", grid_svm.best_score_)
+
+# Use best estimator to predict
+best_svm = grid_svm.best_estimator_
+y_pred_grid_svm = best_svm.predict(X_test)
+```
+
+### 🌲 Grid Search on Random Forest
+
+```python
+from sklearn.ensemble import RandomForestClassifier
+
+param_grid_rf = {
+    'n_estimators': [50, 100, 150],
+    'max_depth': [None, 10, 20],
+    'min_samples_split': [2, 5, 10]
+}
+
+grid_rf = GridSearchCV(RandomForestClassifier(random_state=42), param_grid_rf, cv=5, scoring='accuracy', n_jobs=-1)
+grid_rf.fit(X_train, y_train)
+
+# Best parameters and accuracy
+print("Best Parameters (RF):", grid_rf.best_params_)
+print("Best Accuracy (RF):", grid_rf.best_score_)
+
+# Use best estimator to predict
+best_rf = grid_rf.best_estimator_
+y_pred_grid_rf = best_rf.predict(X_test)
+```
+
+> 🔧 Grid search may take time but helps find optimal hyperparameters for better performance.
+
