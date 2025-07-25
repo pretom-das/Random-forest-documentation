@@ -1,6 +1,7 @@
 # Random-forest-documentation
 
 
+
 # 🫀 Heart Failure Prediction – Data Analysis & Machine Learning
 
 This project explores the **Heart Failure Prediction** dataset, performing data cleaning, transformation, visualization, and training machine learning models (SVM, Decision Tree, Random Forest) to predict heart disease. It uses pandas, scikit-learn, seaborn, and matplotlib.
